@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Add student with valid data",
+      "method": "POST",
+      "headers": {
+        "X-Auth-Token": "valid_teacher_token"
+      },
+      "body": {
+        "group_id": 1,
+        "student_email": "student@example.com"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "enrollment": {
+          "id": "number",
+          "group_id": "number",
+          "student_id": "number"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "POST",
+      "body": {
+        "group_id": 1,
+        "student_email": "student@example.com"
+      },
+      "expectedStatus": 401
+    }
+  ]
+}

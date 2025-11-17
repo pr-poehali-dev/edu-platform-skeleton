@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Get homework sets with valid token",
+      "method": "GET",
+      "headers": {
+        "X-Auth-Token": "valid_teacher_token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "homework_sets": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "GET",
+      "expectedStatus": 401
+    }
+  ]
+}

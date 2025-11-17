@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "Get students with valid token",
+      "method": "GET",
+      "path": "/?group_id=1",
+      "headers": {
+        "X-Auth-Token": "valid_teacher_token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "students": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "GET",
+      "path": "/?group_id=1",
+      "expectedStatus": 401
+    }
+  ]
+}

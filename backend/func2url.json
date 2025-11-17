@@ -1,4 +1,8 @@
 {
+  "createHomeworkSet": "https://functions.poehali.dev/79c21c3b-9319-4720-bef0-1d6c4468a0e2",
+  "getTeacherHomework": "https://functions.poehali.dev/6894f30c-76fa-4127-95ed-cbc3effc5a22",
+  "addStudentToGroup": "https://functions.poehali.dev/143efcbc-c525-4fea-b5f5-7f523334671d",
+  "getGroupStudents": "https://functions.poehali.dev/331cd11a-d7a5-4e00-87a2-ed9ecc2dc6c8",
   "getTeacherTasks": "https://functions.poehali.dev/6e0c117b-0720-4ea4-a9c2-159ff21108e3",
   "createTask": "https://functions.poehali.dev/37e91b25-accb-4799-b1b9-89d5690598db",
   "getTeacherGroups": "https://functions.poehali.dev/692cc077-60b5-4741-bf4f-fe78a35f70d1",

@@ -28,6 +28,22 @@ interface Task {
   ege_number?: number;
 }
 
+interface Student {
+  enrollment_id: number;
+  student_id: number;
+  full_name: string;
+  email: string;
+  enrolled_at: string;
+}
+
+interface HomeworkSet {
+  id: number;
+  title: string;
+  description?: string;
+  created_at: string;
+  task_count: number;
+}
+
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<Section>('groups');
@@ -36,9 +52,21 @@ const TeacherDashboard = () => {
   
   const [groups, setGroups] = useState<Group[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [homeworkSets, setHomeworkSets] = useState<HomeworkSet[]>([]);
   
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showHomeworkForm, setShowHomeworkForm] = useState(false);
+  const [showStudentsModal, setShowStudentsModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [groupStudents, setGroupStudents] = useState<Student[]>([]);
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  
+  const [newHomework, setNewHomework] = useState({
+    title: '',
+    description: '',
+    selectedTasks: [] as number[]
+  });
   
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [newTask, setNewTask] = useState({
@@ -66,6 +94,7 @@ const TeacherDashboard = () => {
     
     loadGroups(token);
     loadTasks(token);
+    loadHomework(token);
   }, [navigate]);
   
   const loadGroups = async (token: string) => {
@@ -106,6 +135,93 @@ const TeacherDashboard = () => {
     }
   };
   
+  const loadHomework = async (token: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/6894f30c-76fa-4127-95ed-cbc3effc5a22', {
+        method: 'GET',
+        headers: { 'X-Auth-Token': token },
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setHomeworkSets(data.homework_sets || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки ДЗ:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const loadGroupStudents = async (groupId: number) => {
+    const token = localStorage.getItem('authToken');
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`https://functions.poehali.dev/331cd11a-d7a5-4e00-87a2-ed9ecc2dc6c8?group_id=${groupId}`, {
+        method: 'GET',
+        headers: { 'X-Auth-Token': token || '' },
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setGroupStudents(data.students || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки студентов:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const openStudentsModal = (group: Group) => {
+    setSelectedGroup(group);
+    setShowStudentsModal(true);
+    loadGroupStudents(group.id);
+  };
+  
+  const handleAddStudent = async () => {
+    if (!newStudentEmail.trim() || !selectedGroup) return;
+    
+    const token = localStorage.getItem('authToken');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/143efcbc-c525-4fea-b5f5-7f523334671d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          group_id: selectedGroup.id,
+          student_email: newStudentEmail,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setGroupStudents([result.enrollment, ...groupStudents]);
+        setNewStudentEmail('');
+        const updatedGroups = groups.map(g => 
+          g.id === selectedGroup.id 
+            ? { ...g, student_count: (g.student_count || 0) + 1 }
+            : g
+        );
+        setGroups(updatedGroups);
+      } else {
+        alert(result.error || 'Ошибка добавления студента');
+      }
+    } catch (error) {
+      console.error('Ошибка добавления студента:', error);
+      alert('Ошибка соединения с сервером');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleCreateGroup = async () => {
     if (!newGroupTitle.trim()) return;
     
@@ -131,6 +247,46 @@ const TeacherDashboard = () => {
       }
     } catch (error) {
       console.error('Ошибка создания группы:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleCreateHomework = async () => {
+    if (!newHomework.title.trim() || newHomework.selectedTasks.length === 0) {
+      alert('Укажите название и выберите задачи');
+      return;
+    }
+    
+    const token = localStorage.getItem('authToken');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/79c21c3b-9319-4720-bef0-1d6c4468a0e2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          title: newHomework.title,
+          description: newHomework.description,
+          task_ids: newHomework.selectedTasks,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setHomeworkSets([result.homework_set, ...homeworkSets]);
+        setNewHomework({ title: '', description: '', selectedTasks: [] });
+        setShowHomeworkForm(false);
+      } else {
+        alert(result.error || 'Ошибка создания ДЗ');
+      }
+    } catch (error) {
+      console.error('Ошибка создания ДЗ:', error);
+      alert('Ошибка соединения с сервером');
     } finally {
       setLoading(false);
     }
@@ -308,7 +464,7 @@ const TeacherDashboard = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => openStudentsModal(group)}>
                               <Icon name="Users" size={14} className="mr-1" />
                               Студенты
                             </Button>
@@ -480,12 +636,149 @@ const TeacherDashboard = () => {
 
             {activeSection === 'homework' && (
               <div className="space-y-6 animate-fade-in">
-                <h2 className="text-2xl font-semibold">Домашние задания</h2>
-                <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    Раздел в разработке
-                  </CardContent>
-                </Card>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Домашние задания</h2>
+                  <Button onClick={() => setShowHomeworkForm(!showHomeworkForm)}>
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Создать ДЗ
+                  </Button>
+                </div>
+
+                {showHomeworkForm && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Новое домашнее задание</CardTitle>
+                      <CardDescription>Соберите вариант из задач банка</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="hwTitle">Название ДЗ</Label>
+                        <Input
+                          id="hwTitle"
+                          placeholder="Например: ДЗ по теме Проценты"
+                          value={newHomework.title}
+                          onChange={(e) => setNewHomework({...newHomework, title: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="hwDesc">Описание (необязательно)</Label>
+                        <Textarea
+                          id="hwDesc"
+                          placeholder="Краткое описание домашнего задания"
+                          value={newHomework.description}
+                          onChange={(e) => setNewHomework({...newHomework, description: e.target.value})}
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label>Выберите задачи из банка</Label>
+                        <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
+                          {tasks.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              Нет задач в банке. Сначала создайте задачи.
+                            </p>
+                          ) : (
+                            tasks.map((task) => (
+                              <label
+                                key={task.id}
+                                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={newHomework.selectedTasks.includes(task.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setNewHomework({
+                                        ...newHomework,
+                                        selectedTasks: [...newHomework.selectedTasks, task.id]
+                                      });
+                                    } else {
+                                      setNewHomework({
+                                        ...newHomework,
+                                        selectedTasks: newHomework.selectedTasks.filter(id => id !== task.id)
+                                      });
+                                    }
+                                  }}
+                                  className="mt-1"
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{task.title}</span>
+                                    {task.ege_number && (
+                                      <Badge variant="secondary" className="text-xs">№{task.ege_number}</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground line-clamp-1">{task.text}</p>
+                                </div>
+                              </label>
+                            ))
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Выбрано задач: {newHomework.selectedTasks.length}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleCreateHomework}
+                          disabled={loading || !newHomework.title.trim() || newHomework.selectedTasks.length === 0}
+                        >
+                          {loading ? 'Создание...' : 'Создать ДЗ'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowHomeworkForm(false);
+                            setNewHomework({title: '', description: '', selectedTasks: []});
+                          }}
+                        >
+                          Отмена
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {homeworkSets.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      Нет созданных домашних заданий. Создайте первое ДЗ!
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {homeworkSets.map((hw) => (
+                      <Card key={hw.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">{hw.title}</CardTitle>
+                              <CardDescription className="mt-1">
+                                {hw.description || 'Без описания'}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="outline">{hw.task_count} задач</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Icon name="Eye" size={14} className="mr-1" />
+                              Просмотр
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Icon name="Send" size={14} className="mr-1" />
+                              Назначить группе
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -525,6 +818,71 @@ const TeacherDashboard = () => {
           </div>
         </main>
       </div>
+
+      {showStudentsModal && selectedGroup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowStudentsModal(false)}>
+          <div className="bg-card rounded-2xl shadow-lg max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold">{selectedGroup.title}</h2>
+                  <p className="text-muted-foreground mt-1">{groupStudents.length} студентов</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowStudentsModal(false)}>
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-180px)]">
+              <div className="space-y-4">
+                <h3 className="font-medium">Добавить студента</h3>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Email студента"
+                    value={newStudentEmail}
+                    onChange={(e) => setNewStudentEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddStudent()}
+                  />
+                  <Button onClick={handleAddStudent} disabled={loading}>
+                    {loading ? 'Добавление...' : 'Добавить'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-medium">Список студентов</h3>
+                {loading && groupStudents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">Загрузка...</div>
+                ) : groupStudents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    В группе пока нет студентов
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {groupStudents.map((student) => (
+                      <div key={student.enrollment_id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon name="User" size={20} className="text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{student.full_name}</div>
+                            <div className="text-sm text-muted-foreground">{student.email}</div>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">
+                          {new Date(student.enrolled_at).toLocaleDateString('ru-RU')}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
