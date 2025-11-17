@@ -196,6 +196,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cursor.close()
     conn.close()
     
+    enrolled_at_str = str(result['enrolled_at']) if result['enrolled_at'] else None
+    
     return {
         'statusCode': 200,
         'headers': {
@@ -205,12 +207,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         'body': json.dumps({
             'success': True,
             'enrollment': {
-                'id': result['id'],
-                'group_id': result['group_id'],
+                'enrollment_id': result['id'],
                 'student_id': result['student_id'],
-                'student_name': student['full_name'],
-                'student_email': student_email,
-                'enrolled_at': result['enrolled_at'].isoformat() if result['enrolled_at'] else None
+                'full_name': student['full_name'],
+                'email': student_email,
+                'enrolled_at': enrolled_at_str
             }
         }),
         'isBase64Encoded': False
