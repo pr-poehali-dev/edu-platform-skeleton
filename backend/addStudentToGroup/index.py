@@ -7,7 +7,7 @@ from typing import Dict, Any
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Add student to group by email
+    Business: Add student to group by email with schema prefix fix
     Args: event with httpMethod, headers with X-Auth-Token, body with group_id and student_email
           context with request_id
     Returns: HTTP response with enrollment info
