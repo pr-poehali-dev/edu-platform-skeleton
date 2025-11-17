@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get groups with valid token",
+      "method": "GET",
+      "headers": {
+        "X-Auth-Token": "teacher_token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "groups": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "GET",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

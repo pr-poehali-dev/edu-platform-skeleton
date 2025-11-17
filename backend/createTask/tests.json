@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Create task with valid data",
+      "method": "POST",
+      "headers": {
+        "X-Auth-Token": "teacher_token"
+      },
+      "body": {
+        "title": "Test Task",
+        "text": "Solve this problem",
+        "topic": "Math",
+        "difficulty": 5,
+        "type": "text",
+        "ege_number": 12
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "task": {
+          "id": "number",
+          "title": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "POST",
+      "body": {
+        "title": "Test",
+        "text": "Text"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get tasks with valid token",
+      "method": "GET",
+      "headers": {
+        "X-Auth-Token": "teacher_token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "tasks": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "GET",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
