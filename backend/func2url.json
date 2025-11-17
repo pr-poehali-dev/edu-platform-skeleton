@@ -1,4 +1,7 @@
 {
+  "getTeacherTasks": "https://functions.poehali.dev/6e0c117b-0720-4ea4-a9c2-159ff21108e3",
+  "createTask": "https://functions.poehali.dev/37e91b25-accb-4799-b1b9-89d5690598db",
+  "getTeacherGroups": "https://functions.poehali.dev/692cc077-60b5-4741-bf4f-fe78a35f70d1",
   "createGroup": "https://functions.poehali.dev/b29b8b2a-e014-40b1-a374-185ba7cc74ae",
   "getStudentDebts": "https://functions.poehali.dev/3ac5f798-0ee2-403f-b33e-02b2983045f4",
   "getStudentDashboard": "https://functions.poehali.dev/9d61b6c8-3cbe-4a7c-98f1-1cdb69c576b7",

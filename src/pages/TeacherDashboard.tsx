@@ -15,6 +15,7 @@ interface Group {
   id: number;
   title: string;
   created_at: string;
+  student_count?: number;
 }
 
 interface Task {
@@ -68,11 +69,41 @@ const TeacherDashboard = () => {
   }, [navigate]);
   
   const loadGroups = async (token: string) => {
-    setLoading(false);
+    setLoading(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/692cc077-60b5-4741-bf4f-fe78a35f70d1', {
+        method: 'GET',
+        headers: { 'X-Auth-Token': token },
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setGroups(data.groups || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки групп:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const loadTasks = async (token: string) => {
-    setLoading(false);
+    setLoading(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/6e0c117b-0720-4ea4-a9c2-159ff21108e3', {
+        method: 'GET',
+        headers: { 'X-Auth-Token': token },
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setTasks(data.tasks || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки задач:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   const handleCreateGroup = async () => {
@@ -111,7 +142,41 @@ const TeacherDashboard = () => {
       return;
     }
     
-    alert('Функция создания задач пока недоступна. Достигнут лимит backend функций (5/5). Но интерфейс готов!');
+    const token = localStorage.getItem('authToken');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/37e91b25-accb-4799-b1b9-89d5690598db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          title: newTask.title,
+          text: newTask.text,
+          topic: newTask.topic,
+          difficulty: newTask.difficulty,
+          type: newTask.type,
+          ege_number: newTask.ege_number,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        setTasks([result.task, ...tasks]);
+        setNewTask({ title: '', text: '', topic: '', difficulty: 1, type: 'text', ege_number: 1 });
+        setShowTaskForm(false);
+      } else {
+        alert(result.error || 'Ошибка создания задачи');
+      }
+    } catch (error) {
+      console.error('Ошибка создания задачи:', error);
+      alert('Ошибка соединения с сервером');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const menuItems = [
@@ -238,7 +303,7 @@ const TeacherDashboard = () => {
                                 Создана: {new Date(group.created_at).toLocaleDateString('ru-RU')}
                               </CardDescription>
                             </div>
-                            <Badge variant="outline">0 студентов</Badge>
+                            <Badge variant="outline">{group.student_count || 0} студентов</Badge>
                           </div>
                         </CardHeader>
                         <CardContent>
