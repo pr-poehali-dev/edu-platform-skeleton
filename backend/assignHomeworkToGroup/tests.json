@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS method",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Test missing token",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "set_id": 1,
+        "group_id": 1
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

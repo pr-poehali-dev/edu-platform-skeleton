@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import HomeworkDetailModal from '@/components/student/HomeworkDetailModal';
 
 type Section = 'homework' | 'history' | 'debts' | 'profile';
 
@@ -26,6 +27,8 @@ const StudentDashboard = () => {
   const [activeHomework, setActiveHomework] = useState<HomeworkItem[]>([]);
   const [debts, setDebts] = useState<HomeworkItem[]>([]);
   const [history, setHistory] = useState<HomeworkItem[]>([]);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedHomework, setSelectedHomework] = useState<HomeworkItem | null>(null);
   
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -47,32 +50,87 @@ const StudentDashboard = () => {
   const fetchDashboardData = async (token: string) => {
     setLoading(true);
     try {
-      const [dashboardRes, debtsRes] = await Promise.all([
-        fetch('https://functions.poehali.dev/9d61b6c8-3cbe-4a7c-98f1-1cdb69c576b7', {
-          method: 'GET',
-          headers: { 'X-Auth-Token': token },
-        }),
-        fetch('https://functions.poehali.dev/3ac5f798-0ee2-403f-b33e-02b2983045f4', {
-          method: 'GET',
-          headers: { 'X-Auth-Token': token },
-        })
-      ]);
+      const homeworkRes = await fetch('https://functions.poehali.dev/9d607f84-8c0a-450d-bc75-6f2fecd43bb8', {
+        method: 'GET',
+        headers: { 'X-Auth-Token': token },
+      });
       
-      const dashboardData = await dashboardRes.json();
-      const debtsData = await debtsRes.json();
+      const homeworkData = await homeworkRes.json();
       
-      if (dashboardRes.ok && dashboardData.success) {
-        setActiveHomework(dashboardData.data.active_homework || []);
-        setHistory(dashboardData.data.history || []);
-      }
-      
-      if (debtsRes.ok && debtsData.success) {
-        setDebts(debtsData.debts || []);
+      if (homeworkRes.ok && homeworkData.success) {
+        const homework = homeworkData.homework || [];
+        const active = homework.filter((hw: any) => hw.status === 'assigned' || hw.status === 'in_progress');
+        const completed = homework.filter((hw: any) => hw.status === 'completed');
+        const debtsItems = homework.filter((hw: any) => hw.status === 'overdue');
+        
+        setActiveHomework(active.map((hw: any) => ({
+          id: hw.variant_id,
+          title: hw.title,
+          description: hw.description,
+          status: hw.status,
+          total_tasks: hw.task_count,
+          checked_tasks: hw.submitted_count,
+          final_score: hw.final_score
+        })));
+        
+        setHistory(completed.map((hw: any) => ({
+          id: hw.variant_id,
+          title: hw.title,
+          description: hw.description,
+          status: hw.status,
+          total_tasks: hw.task_count,
+          checked_tasks: hw.submitted_count,
+          final_score: hw.final_score
+        })));
+        
+        setDebts(debtsItems.map((hw: any) => ({
+          id: hw.variant_id,
+          title: hw.title,
+          description: hw.description,
+          status: hw.status,
+          total_tasks: hw.task_count,
+          checked_tasks: hw.submitted_count,
+          final_score: hw.final_score
+        })));
       }
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenHomework = (homework: HomeworkItem) => {
+    setSelectedHomework(homework);
+    setShowDetailModal(true);
+  };
+
+  const handleSubmitAnswer = async (variantItemId: number, answer: any) => {
+    const token = localStorage.getItem('authToken');
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/f2485f99-714a-4010-bcf3-97a400ec9556', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token || '',
+        },
+        body: JSON.stringify({
+          variant_item_id: variantItemId,
+          ...answer
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        alert('Ответ отправлен!');
+      } else {
+        alert(result.error || 'Ошибка отправки ответа');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки ответа:', error);
+      alert('Ошибка соединения с сервером');
     }
   };
 
@@ -180,7 +238,7 @@ const StudentDashboard = () => {
                             <div className="text-sm text-muted-foreground">
                               Статус: {task.status === 'not_started' ? 'Не начато' : task.status === 'in_progress' ? 'В процессе' : 'Отправлено'}
                             </div>
-                            <Button size="sm">Приступить к выполнению</Button>
+                            <Button size="sm" onClick={() => handleOpenHomework(task)}>Приступить к выполнению</Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -319,6 +377,16 @@ const StudentDashboard = () => {
           </div>
         </main>
       </div>
+
+      {selectedHomework && (
+        <HomeworkDetailModal
+          show={showDetailModal}
+          variantId={selectedHomework.id}
+          homeworkTitle={selectedHomework.title}
+          onClose={() => setShowDetailModal(false)}
+          onSubmit={handleSubmitAnswer}
+        />
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +25,17 @@ interface HomeworkSet {
   task_count: number;
 }
 
+interface Group {
+  id: number;
+  title: string;
+  created_at: string;
+  student_count?: number;
+}
+
 interface HomeworkSectionProps {
   homeworkSets: HomeworkSet[];
   tasks: Task[];
+  groups: Group[];
   loading: boolean;
   showHomeworkForm: boolean;
   newHomework: {
@@ -37,19 +46,70 @@ interface HomeworkSectionProps {
   setShowHomeworkForm: (show: boolean) => void;
   setNewHomework: (homework: any) => void;
   handleCreateHomework: () => void;
+  handleAssignToGroup: (setId: number, groupId: number) => void;
 }
 
 const HomeworkSection = ({
   homeworkSets,
   tasks,
+  groups,
   loading,
   showHomeworkForm,
   newHomework,
   setShowHomeworkForm,
   setNewHomework,
   handleCreateHomework,
+  handleAssignToGroup,
 }: HomeworkSectionProps) => {
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedHomework, setSelectedHomework] = useState<HomeworkSet | null>(null);
+
+  const openAssignModal = (hw: HomeworkSet) => {
+    setSelectedHomework(hw);
+    setShowAssignModal(true);
+  };
+
   return (
+    <>
+      {showAssignModal && selectedHomework && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAssignModal(false)}>
+          <div className="bg-card rounded-2xl shadow-lg max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Назначить ДЗ группе</h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowAssignModal(false)}>
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">{selectedHomework.title}</p>
+            </div>
+            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+              {groups.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">Нет групп</p>
+              ) : (
+                groups.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => {
+                      handleAssignToGroup(selectedHomework.id, group.id);
+                      setShowAssignModal(false);
+                    }}
+                    className="w-full flex items-center justify-between p-4 rounded-lg border hover:bg-muted transition-colors"
+                  >
+                    <div className="text-left">
+                      <div className="font-medium">{group.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {group.student_count || 0} студентов
+                      </div>
+                    </div>
+                    <Icon name="ChevronRight" size={20} />
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Домашние задания</h2>
@@ -184,7 +244,7 @@ const HomeworkSection = ({
                     <Icon name="Eye" size={14} className="mr-1" />
                     Просмотр
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => openAssignModal(hw)}>
                     <Icon name="Send" size={14} className="mr-1" />
                     Назначить группе
                   </Button>
@@ -195,6 +255,7 @@ const HomeworkSection = ({
         </div>
       )}
     </div>
+    </>
   );
 };
 
