@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
+import GroupsSection from '@/components/teacher/GroupsSection';
+import TasksSection from '@/components/teacher/TasksSection';
+import HomeworkSection from '@/components/teacher/HomeworkSection';
+import StudentsModal from '@/components/teacher/StudentsModal';
 
 type Section = 'groups' | 'tasks' | 'homework' | 'theory' | 'profile';
 
@@ -403,383 +402,41 @@ const TeacherDashboard = () => {
             </div>
 
             {activeSection === 'groups' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Мои группы</h2>
-                  <Button onClick={() => setShowGroupForm(!showGroupForm)}>
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    Создать группу
-                  </Button>
-                </div>
-
-                {showGroupForm && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Новая группа</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="groupTitle">Название группы</Label>
-                        <Input
-                          id="groupTitle"
-                          placeholder="Например: 11-А класс"
-                          value={newGroupTitle}
-                          onChange={(e) => setNewGroupTitle(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={handleCreateGroup} disabled={loading}>
-                          {loading ? 'Создание...' : 'Создать'}
-                        </Button>
-                        <Button variant="outline" onClick={() => setShowGroupForm(false)}>
-                          Отмена
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {loading && groups.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">Загрузка групп...</div>
-                ) : groups.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Нет созданных групп. Создайте первую группу!
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4">
-                    {groups.map((group) => (
-                      <Card key={group.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">{group.title}</CardTitle>
-                              <CardDescription className="mt-1">
-                                Создана: {new Date(group.created_at).toLocaleDateString('ru-RU')}
-                              </CardDescription>
-                            </div>
-                            <Badge variant="outline">{group.student_count || 0} студентов</Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => openStudentsModal(group)}>
-                              <Icon name="Users" size={14} className="mr-1" />
-                              Студенты
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Icon name="Send" size={14} className="mr-1" />
-                              Назначить ДЗ
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <GroupsSection
+                groups={groups}
+                loading={loading}
+                showGroupForm={showGroupForm}
+                newGroupTitle={newGroupTitle}
+                setShowGroupForm={setShowGroupForm}
+                setNewGroupTitle={setNewGroupTitle}
+                handleCreateGroup={handleCreateGroup}
+                openStudentsModal={openStudentsModal}
+              />
             )}
 
             {activeSection === 'tasks' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Банк задач</h2>
-                  <Button onClick={() => setShowTaskForm(!showTaskForm)}>
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    Новая задача
-                  </Button>
-                </div>
-
-                {showTaskForm && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Новая задача</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="taskTitle">Название задачи</Label>
-                        <Input
-                          id="taskTitle"
-                          placeholder="Например: Задача на проценты"
-                          value={newTask.title}
-                          onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="taskText">Условие задачи</Label>
-                        <Textarea
-                          id="taskText"
-                          placeholder="Введите условие задачи..."
-                          value={newTask.text}
-                          onChange={(e) => setNewTask({...newTask, text: e.target.value})}
-                          rows={4}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="taskTopic">Тема</Label>
-                          <Input
-                            id="taskTopic"
-                            placeholder="Например: Проценты"
-                            value={newTask.topic}
-                            onChange={(e) => setNewTask({...newTask, topic: e.target.value})}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="egeNumber">Номер ЕГЭ</Label>
-                          <Select 
-                            value={newTask.ege_number.toString()} 
-                            onValueChange={(val) => setNewTask({...newTask, ege_number: parseInt(val)})}
-                          >
-                            <SelectTrigger id="egeNumber">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({length: 27}, (_, i) => i + 1).map(num => (
-                                <SelectItem key={num} value={num.toString()}>
-                                  Задание {num}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="difficulty">Сложность (1-10)</Label>
-                          <Input
-                            id="difficulty"
-                            type="number"
-                            min="1"
-                            max="10"
-                            value={newTask.difficulty}
-                            onChange={(e) => setNewTask({...newTask, difficulty: parseInt(e.target.value) || 1})}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="taskType">Тип задачи</Label>
-                          <Select 
-                            value={newTask.type} 
-                            onValueChange={(val) => setNewTask({...newTask, type: val})}
-                          >
-                            <SelectTrigger id="taskType">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">Текстовый ответ</SelectItem>
-                              <SelectItem value="file">Файл</SelectItem>
-                              <SelectItem value="code">Код</SelectItem>
-                              <SelectItem value="paint">Рисунок</SelectItem>
-                              <SelectItem value="table">Таблица</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button onClick={handleCreateTask} disabled={loading}>
-                          {loading ? 'Создание...' : 'Создать задачу'}
-                        </Button>
-                        <Button variant="outline" onClick={() => setShowTaskForm(false)}>
-                          Отмена
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {tasks.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Нет задач в банке. Создайте первую задачу!
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4">
-                    {tasks.map((task) => (
-                      <Card key={task.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <CardTitle className="text-lg">{task.title}</CardTitle>
-                                {task.ege_number && (
-                                  <Badge variant="secondary">ЕГЭ №{task.ege_number}</Badge>
-                                )}
-                              </div>
-                              <CardDescription className="mt-2 line-clamp-2">
-                                {task.text}
-                              </CardDescription>
-                            </div>
-                            <Badge variant="outline">
-                              Сложность: {task.difficulty}/10
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Тема: {task.topic || 'Не указана'}</span>
-                            <span>•</span>
-                            <span>Тип: {task.type}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TasksSection
+                tasks={tasks}
+                loading={loading}
+                showTaskForm={showTaskForm}
+                newTask={newTask}
+                setShowTaskForm={setShowTaskForm}
+                setNewTask={setNewTask}
+                handleCreateTask={handleCreateTask}
+              />
             )}
 
             {activeSection === 'homework' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Домашние задания</h2>
-                  <Button onClick={() => setShowHomeworkForm(!showHomeworkForm)}>
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    Создать ДЗ
-                  </Button>
-                </div>
-
-                {showHomeworkForm && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Новое домашнее задание</CardTitle>
-                      <CardDescription>Соберите вариант из задач банка</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="hwTitle">Название ДЗ</Label>
-                        <Input
-                          id="hwTitle"
-                          placeholder="Например: ДЗ по теме Проценты"
-                          value={newHomework.title}
-                          onChange={(e) => setNewHomework({...newHomework, title: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="hwDesc">Описание (необязательно)</Label>
-                        <Textarea
-                          id="hwDesc"
-                          placeholder="Краткое описание домашнего задания"
-                          value={newHomework.description}
-                          onChange={(e) => setNewHomework({...newHomework, description: e.target.value})}
-                          rows={2}
-                        />
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label>Выберите задачи из банка</Label>
-                        <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-                          {tasks.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              Нет задач в банке. Сначала создайте задачи.
-                            </p>
-                          ) : (
-                            tasks.map((task) => (
-                              <label
-                                key={task.id}
-                                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={newHomework.selectedTasks.includes(task.id)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNewHomework({
-                                        ...newHomework,
-                                        selectedTasks: [...newHomework.selectedTasks, task.id]
-                                      });
-                                    } else {
-                                      setNewHomework({
-                                        ...newHomework,
-                                        selectedTasks: newHomework.selectedTasks.filter(id => id !== task.id)
-                                      });
-                                    }
-                                  }}
-                                  className="mt-1"
-                                />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{task.title}</span>
-                                    {task.ege_number && (
-                                      <Badge variant="secondary" className="text-xs">№{task.ege_number}</Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-muted-foreground line-clamp-1">{task.text}</p>
-                                </div>
-                              </label>
-                            ))
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Выбрано задач: {newHomework.selectedTasks.length}
-                        </p>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={handleCreateHomework}
-                          disabled={loading || !newHomework.title.trim() || newHomework.selectedTasks.length === 0}
-                        >
-                          {loading ? 'Создание...' : 'Создать ДЗ'}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setShowHomeworkForm(false);
-                            setNewHomework({title: '', description: '', selectedTasks: []});
-                          }}
-                        >
-                          Отмена
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {homeworkSets.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Нет созданных домашних заданий. Создайте первое ДЗ!
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4">
-                    {homeworkSets.map((hw) => (
-                      <Card key={hw.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">{hw.title}</CardTitle>
-                              <CardDescription className="mt-1">
-                                {hw.description || 'Без описания'}
-                              </CardDescription>
-                            </div>
-                            <Badge variant="outline">{hw.task_count} задач</Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              <Icon name="Eye" size={14} className="mr-1" />
-                              Просмотр
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Icon name="Send" size={14} className="mr-1" />
-                              Назначить группе
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <HomeworkSection
+                homeworkSets={homeworkSets}
+                tasks={tasks}
+                loading={loading}
+                showHomeworkForm={showHomeworkForm}
+                newHomework={newHomework}
+                setShowHomeworkForm={setShowHomeworkForm}
+                setNewHomework={setNewHomework}
+                handleCreateHomework={handleCreateHomework}
+              />
             )}
 
             {activeSection === 'theory' && (
@@ -819,70 +476,16 @@ const TeacherDashboard = () => {
         </main>
       </div>
 
-      {showStudentsModal && selectedGroup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowStudentsModal(false)}>
-          <div className="bg-card rounded-2xl shadow-lg max-w-2xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold">{selectedGroup.title}</h2>
-                  <p className="text-muted-foreground mt-1">{groupStudents.length} студентов</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowStudentsModal(false)}>
-                  <Icon name="X" size={20} />
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-180px)]">
-              <div className="space-y-4">
-                <h3 className="font-medium">Добавить студента</h3>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Email студента"
-                    value={newStudentEmail}
-                    onChange={(e) => setNewStudentEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddStudent()}
-                  />
-                  <Button onClick={handleAddStudent} disabled={loading}>
-                    {loading ? 'Добавление...' : 'Добавить'}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="font-medium">Список студентов</h3>
-                {loading && groupStudents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">Загрузка...</div>
-                ) : groupStudents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    В группе пока нет студентов
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {groupStudents.map((student) => (
-                      <div key={student.enrollment_id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Icon name="User" size={20} className="text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{student.full_name}</div>
-                            <div className="text-sm text-muted-foreground">{student.email}</div>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">
-                          {new Date(student.enrolled_at).toLocaleDateString('ru-RU')}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <StudentsModal
+        show={showStudentsModal}
+        selectedGroup={selectedGroup}
+        groupStudents={groupStudents}
+        newStudentEmail={newStudentEmail}
+        loading={loading}
+        setNewStudentEmail={setNewStudentEmail}
+        handleAddStudent={handleAddStudent}
+        onClose={() => setShowStudentsModal(false)}
+      />
     </div>
   );
 };
