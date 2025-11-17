@@ -29,6 +29,7 @@ const Login = () => {
     setLoading(true);
     
     try {
+      console.log('Отправка запроса логина:', { email });
       const response = await fetch('https://functions.poehali.dev/80676bdd-f857-4cf7-91d2-6c9908b554f3', {
         method: 'POST',
         headers: {
@@ -40,7 +41,9 @@ const Login = () => {
         }),
       });
       
+      console.log('Статус ответа:', response.status);
       const data = await response.json();
+      console.log('Данные ответа:', data);
       
       if (!response.ok) {
         setError(data.error || 'Ошибка авторизации');
