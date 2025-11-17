@@ -92,7 +92,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+    email_escaped = email.replace("'", "''")
+    cursor.execute(f"SELECT id FROM users WHERE email = '{email_escaped}'")
     existing_user = cursor.fetchone()
     
     if existing_user:
@@ -111,10 +112,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     system_salt = os.environ.get('SYSTEM_SALT', '')
     password_hash = hashlib.sha256((password + system_salt).encode()).hexdigest()
     
-    cursor.execute(
-        "INSERT INTO users (full_name, email, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING id",
-        (full_name, email, password_hash, role)
-    )
+    full_name_escaped = full_name.replace("'", "''")
+    cursor.execute(f"""
+        INSERT INTO users (full_name, email, password_hash, role) 
+        VALUES ('{full_name_escaped}', '{email_escaped}', '{password_hash}', '{role}') 
+        RETURNING id
+    """)
     result = cursor.fetchone()
     user_id = result['id']
     

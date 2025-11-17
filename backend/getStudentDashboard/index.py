@@ -105,7 +105,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT 
             hv.id as variant_id,
             hv.status as variant_status,
@@ -118,11 +118,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         FROM homework_variants hv
         JOIN homework_sets hs ON hv.set_id = hs.id
         LEFT JOIN variant_items vi ON vi.variant_id = hv.id
-        LEFT JOIN submissions s ON s.variant_item_id = vi.id AND s.student_id = %s
-        WHERE hv.student_id = %s
+        LEFT JOIN submissions s ON s.variant_item_id = vi.id AND s.student_id = {student_id}
+        WHERE hv.student_id = {student_id}
         GROUP BY hv.id, hv.status, hv.created_at, hs.title, hs.description
         ORDER BY hv.created_at DESC
-    """, (student_id, student_id))
+    """)
     
     variants = cursor.fetchall()
     

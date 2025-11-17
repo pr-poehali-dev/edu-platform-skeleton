@@ -73,10 +73,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute(
-        "SELECT id, full_name, email, password_hash, role FROM users WHERE email = %s",
-        (email,)
-    )
+    email_escaped = email.replace("'", "''")
+    cursor.execute(f"SELECT id, full_name, email, password_hash, role FROM users WHERE email = '{email_escaped}'")
     user = cursor.fetchone()
     
     cursor.close()
