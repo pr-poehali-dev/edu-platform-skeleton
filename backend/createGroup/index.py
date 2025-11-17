@@ -111,7 +111,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     title_escaped = title.replace("'", "''")
     cursor.execute(f"""
-        INSERT INTO groups (title, teacher_id) 
+        INSERT INTO t_p78721878_edu_platform_skeleto.groups (title, teacher_id) 
         VALUES ('{title_escaped}', {teacher_id}) 
         RETURNING id, title, teacher_id, created_at
     """)
@@ -133,7 +133,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'id': result['id'],
                 'title': result['title'],
                 'teacher_id': result['teacher_id'],
-                'created_at': result['created_at'].isoformat() if result['created_at'] else None
+                'created_at': str(result['created_at']) if result['created_at'] else None
             }
         }),
         'isBase64Encoded': False

@@ -109,7 +109,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute(f"SELECT teacher_id FROM groups WHERE id = {group_id}")
+    cursor.execute(f"SELECT teacher_id FROM t_p78721878_edu_platform_skeleto.groups WHERE id = {group_id}")
     group = cursor.fetchone()
     
     if not group:
@@ -145,8 +145,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             u.full_name,
             u.email,
             e.enrolled_at
-        FROM enrollments e
-        JOIN users u ON u.id = e.student_id
+        FROM t_p78721878_edu_platform_skeleto.enrollments e
+        JOIN t_p78721878_edu_platform_skeleto.users u ON u.id = e.student_id
         WHERE e.group_id = {group_id}
         ORDER BY e.enrolled_at DESC
     """)
@@ -160,7 +160,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'student_id': student['student_id'],
             'full_name': student['full_name'],
             'email': student['email'],
-            'enrolled_at': student['enrolled_at'].isoformat() if student['enrolled_at'] else None
+            'enrolled_at': str(student['enrolled_at']) if student['enrolled_at'] else None
         })
     
     cursor.close()

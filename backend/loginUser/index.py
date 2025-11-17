@@ -74,7 +74,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     email_escaped = email.replace("'", "''")
-    cursor.execute(f"SELECT id, full_name, email, password_hash, role FROM users WHERE email = '{email_escaped}'")
+    cursor.execute(f"SELECT id, full_name, email, password_hash, role FROM t_p78721878_edu_platform_skeleto.users WHERE email = '{email_escaped}'")
     user = cursor.fetchone()
     
     cursor.close()

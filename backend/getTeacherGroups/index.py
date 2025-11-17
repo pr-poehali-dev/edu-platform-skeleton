@@ -101,8 +101,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             g.title,
             g.created_at,
             COUNT(e.id) as student_count
-        FROM groups g
-        LEFT JOIN enrollments e ON e.group_id = g.id
+        FROM t_p78721878_edu_platform_skeleto.groups g
+        LEFT JOIN t_p78721878_edu_platform_skeleto.enrollments e ON e.group_id = g.id
         WHERE g.teacher_id = {teacher_id}
         GROUP BY g.id, g.title, g.created_at
         ORDER BY g.created_at DESC
@@ -115,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         groups.append({
             'id': group['id'],
             'title': group['title'],
-            'created_at': group['created_at'].isoformat() if group['created_at'] else None,
+            'created_at': str(group['created_at']) if group['created_at'] else None,
             'student_count': group['student_count'] or 0
         })
     

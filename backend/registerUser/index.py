@@ -93,7 +93,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     email_escaped = email.replace("'", "''")
-    cursor.execute(f"SELECT id FROM users WHERE email = '{email_escaped}'")
+    cursor.execute(f"SELECT id FROM t_p78721878_edu_platform_skeleto.users WHERE email = '{email_escaped}'")
     existing_user = cursor.fetchone()
     
     if existing_user:
@@ -114,7 +114,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     full_name_escaped = full_name.replace("'", "''")
     cursor.execute(f"""
-        INSERT INTO users (full_name, email, password_hash, role) 
+        INSERT INTO t_p78721878_edu_platform_skeleto.users (full_name, email, password_hash, role) 
         VALUES ('{full_name_escaped}', '{email_escaped}', '{password_hash}', '{role}') 
         RETURNING id
     """)
