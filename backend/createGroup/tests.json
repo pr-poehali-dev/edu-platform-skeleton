@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "Create group with valid token",
+      "method": "POST",
+      "headers": {
+        "X-Auth-Token": "teacher_token_here"
+      },
+      "body": {
+        "title": "Test Group"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "group": {
+          "id": "number",
+          "title": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject without token",
+      "method": "POST",
+      "body": {
+        "title": "Test Group"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

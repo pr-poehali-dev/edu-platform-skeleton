@@ -15,6 +15,7 @@ interface HomeworkItem {
   total_tasks: number;
   checked_tasks: number;
   avg_score?: number;
+  final_score?: number;
 }
 
 const StudentDashboard = () => {
@@ -46,19 +47,27 @@ const StudentDashboard = () => {
   const fetchDashboardData = async (token: string) => {
     setLoading(true);
     try {
-      const response = await fetch('https://functions.poehali.dev/9d61b6c8-3cbe-4a7c-98f1-1cdb69c576b7', {
-        method: 'GET',
-        headers: {
-          'X-Auth-Token': token,
-        },
-      });
+      const [dashboardRes, debtsRes] = await Promise.all([
+        fetch('https://functions.poehali.dev/9d61b6c8-3cbe-4a7c-98f1-1cdb69c576b7', {
+          method: 'GET',
+          headers: { 'X-Auth-Token': token },
+        }),
+        fetch('https://functions.poehali.dev/3ac5f798-0ee2-403f-b33e-02b2983045f4', {
+          method: 'GET',
+          headers: { 'X-Auth-Token': token },
+        })
+      ]);
       
-      const result = await response.json();
+      const dashboardData = await dashboardRes.json();
+      const debtsData = await debtsRes.json();
       
-      if (response.ok && result.success) {
-        setActiveHomework(result.data.active_homework || []);
-        setDebts(result.data.debts || []);
-        setHistory(result.data.history || []);
+      if (dashboardRes.ok && dashboardData.success) {
+        setActiveHomework(dashboardData.data.active_homework || []);
+        setHistory(dashboardData.data.history || []);
+      }
+      
+      if (debtsRes.ok && debtsData.success) {
+        setDebts(debtsData.debts || []);
       }
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
@@ -213,7 +222,7 @@ const StudentDashboard = () => {
                               </CardDescription>
                             </div>
                             <Badge variant="destructive">
-                              {task.avg_score ? `Оценка: ${task.avg_score}` : 'Не проверено'}
+                              {task.final_score !== null && task.final_score !== undefined ? `${task.final_score}%` : 'Не проверено'}
                             </Badge>
                           </div>
                         </CardHeader>

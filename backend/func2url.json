@@ -1,4 +1,6 @@
 {
+  "createGroup": "https://functions.poehali.dev/b29b8b2a-e014-40b1-a374-185ba7cc74ae",
+  "getStudentDebts": "https://functions.poehali.dev/3ac5f798-0ee2-403f-b33e-02b2983045f4",
   "getStudentDashboard": "https://functions.poehali.dev/9d61b6c8-3cbe-4a7c-98f1-1cdb69c576b7",
   "loginUser": "https://functions.poehali.dev/80676bdd-f857-4cf7-91d2-6c9908b554f3",
   "registerUser": "https://functions.poehali.dev/e560f950-efc0-499d-ade5-a7c0b2469ced"
