@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,24 @@ import Icon from '@/components/ui/icon';
 type Section = 'homework' | 'history' | 'debts' | 'profile';
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<Section>('homework');
+  const [userName, setUserName] = useState('Студент');
+  
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const role = localStorage.getItem('userRole');
+    const name = localStorage.getItem('userName');
+    
+    if (!token || role !== 'student') {
+      navigate('/login');
+      return;
+    }
+    
+    if (name) {
+      setUserName(name);
+    }
+  }, [navigate]);
 
   const menuItems = [
     { id: 'homework' as Section, label: 'Мои ДЗ', icon: 'BookOpen' },
@@ -43,7 +61,7 @@ const StudentDashboard = () => {
                 <Icon name="GraduationCap" size={24} className="text-primary" />
               </div>
               <div>
-                <h2 className="font-semibold">Иван Иванов</h2>
+                <h2 className="font-semibold">{userName}</h2>
                 <p className="text-sm text-muted-foreground">Студент</p>
               </div>
             </div>
@@ -67,7 +85,16 @@ const StudentDashboard = () => {
           </nav>
 
           <div className="mt-8 pt-8 border-t">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-muted-foreground hover:bg-muted transition-all">
+            <button 
+              onClick={() => {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('userId');
+                navigate('/login');
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-muted-foreground hover:bg-muted transition-all"
+            >
               <Icon name="LogOut" size={20} />
               Выйти
             </button>
@@ -77,7 +104,7 @@ const StudentDashboard = () => {
         <main className="flex-1 p-8">
           <div className="max-w-5xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold mb-2">Добро пожаловать, Иван! 👋</h1>
+              <h1 className="text-3xl font-semibold mb-2">Добро пожаловать, {userName.split(' ')[0]}! 👋</h1>
               <p className="text-muted-foreground">
                 У вас {homeworkTasks.length} активных заданий и {debtTasks.length} долга
               </p>

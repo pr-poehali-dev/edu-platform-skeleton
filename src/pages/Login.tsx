@@ -1,17 +1,71 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', { email, password });
+    setError('');
+    
+    if (!email.trim() || !email.includes('@')) {
+      setError('Введите корректный email');
+      return;
+    }
+    
+    if (!password) {
+      setError('Введите пароль');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://functions.poehali.dev/80676bdd-f857-4cf7-91d2-6c9908b554f3', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || 'Ошибка авторизации');
+        return;
+      }
+      
+      if (data.success && data.token) {
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userRole', data.user.role);
+        localStorage.setItem('userName', data.user.full_name);
+        localStorage.setItem('userId', data.user.id.toString());
+        
+        if (data.user.role === 'student') {
+          navigate('/student');
+        } else if (data.user.role === 'teacher') {
+          navigate('/teacher');
+        } else {
+          navigate('/');
+        }
+      }
+    } catch (err) {
+      setError('Ошибка соединения с сервером');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,8 +107,18 @@ const Login = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full h-11 text-base font-medium">
-              Войти
+            {error && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-base font-medium" 
+              disabled={loading}
+            >
+              {loading ? 'Вход...' : 'Войти'}
             </Button>
           </form>
 
