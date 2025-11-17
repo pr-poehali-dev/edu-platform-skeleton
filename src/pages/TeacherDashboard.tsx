@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/ui/icon';
+import TeacherSidebar from '@/components/teacher/TeacherSidebar';
+import TeacherHeader from '@/components/teacher/TeacherHeader';
 import GroupsSection from '@/components/teacher/GroupsSection';
 import TasksSection from '@/components/teacher/TasksSection';
 import HomeworkSection from '@/components/teacher/HomeworkSection';
 import StudentsModal from '@/components/teacher/StudentsModal';
 import TheorySection from '@/components/teacher/TheorySection';
 import StatisticsSection from '@/components/teacher/StatisticsSection';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import ProfileSection from '@/components/teacher/ProfileSection';
 
 type Section = 'groups' | 'tasks' | 'homework' | 'theory' | 'profile' | 'statistics';
 
@@ -66,8 +64,6 @@ const TeacherDashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [homeworkSets, setHomeworkSets] = useState<HomeworkSet[]>([]);
   const [theory, setTheory] = useState<Theory[]>([]);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileData, setProfileData] = useState({ full_name: '', email: '' });
   
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -428,7 +424,7 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile = async (profileData: { full_name: string; email: string }) => {
     const token = localStorage.getItem('authToken');
     setLoading(true);
     
@@ -447,7 +443,6 @@ const TeacherDashboard = () => {
       if (response.ok && result.success) {
         setUserName(result.user.full_name);
         localStorage.setItem('userName', result.user.full_name);
-        setEditingProfile(false);
         alert('Профиль обновлён');
       } else {
         alert(result.error || 'Ошибка обновления профиля');
@@ -477,73 +472,22 @@ const TeacherDashboard = () => {
     return [];
   };
 
-  const menuItems = [
-    { id: 'groups' as Section, label: 'Группы', icon: 'Users' },
-    { id: 'tasks' as Section, label: 'Банк задач', icon: 'BookOpen' },
-    { id: 'homework' as Section, label: 'Домашние задания', icon: 'ClipboardList' },
-    { id: 'theory' as Section, label: 'Теория', icon: 'BookMarked' },
-    { id: 'statistics' as Section, label: 'Статистика', icon: 'BarChart' },
-    { id: 'profile' as Section, label: 'Профиль', icon: 'User' },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-muted/20">
       <div className="flex">
-        <aside className="w-64 min-h-screen bg-card border-r p-6">
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Icon name="GraduationCap" size={24} className="text-primary" />
-              </div>
-              <div>
-                <h2 className="font-semibold">{userName}</h2>
-                <p className="text-sm text-muted-foreground">Учитель</p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="space-y-2">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
-                  activeSection === item.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <Icon name={item.icon} size={20} />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="mt-8 pt-8 border-t">
-            <button 
-              onClick={() => {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('userName');
-                localStorage.removeItem('userId');
-                navigate('/login');
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-muted-foreground hover:bg-muted transition-all"
-            >
-              <Icon name="LogOut" size={20} />
-              Выйти
-            </button>
-          </div>
-        </aside>
+        <TeacherSidebar
+          userName={userName}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
 
         <main className="flex-1 p-8">
           <div className="max-w-5xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-3xl font-semibold mb-2">Добро пожаловать, {userName.split(' ')[0]}! 👋</h1>
-              <p className="text-muted-foreground">
-                У вас {groups.length} групп и {tasks.length} задач в банке
-              </p>
-            </div>
+            <TeacherHeader
+              userName={userName}
+              groupsCount={groups.length}
+              tasksCount={tasks.length}
+            />
 
             {activeSection === 'groups' && (
               <GroupsSection
@@ -602,65 +546,11 @@ const TeacherDashboard = () => {
             )}
 
             {activeSection === 'profile' && (
-              <div className="space-y-6 animate-fade-in">
-                <h2 className="text-2xl font-semibold">Настройки профиля</h2>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Личная информация</CardTitle>
-                    <CardDescription>Управляйте своими данными</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {editingProfile ? (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="profileName">Имя</Label>
-                          <Input
-                            id="profileName"
-                            value={profileData.full_name}
-                            onChange={(e) => setProfileData({...profileData, full_name: e.target.value})}
-                            placeholder={userName}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="profileEmail">Email</Label>
-                          <Input
-                            id="profileEmail"
-                            type="email"
-                            value={profileData.email}
-                            onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                            placeholder="email@example.com"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button onClick={handleUpdateProfile} disabled={loading}>
-                            {loading ? 'Сохранение...' : 'Сохранить'}
-                          </Button>
-                          <Button variant="outline" onClick={() => {
-                            setEditingProfile(false);
-                            setProfileData({full_name: '', email: ''});
-                          }}>
-                            Отмена
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <label className="text-sm font-medium">Имя</label>
-                          <p className="text-muted-foreground mt-1">{userName}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium">Роль</label>
-                          <p className="text-muted-foreground mt-1">Учитель</p>
-                        </div>
-                        <Button variant="outline" className="mt-4" onClick={() => setEditingProfile(true)}>
-                          Редактировать профиль
-                        </Button>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+              <ProfileSection
+                userName={userName}
+                loading={loading}
+                onUpdateProfile={handleUpdateProfile}
+              />
             )}
           </div>
         </main>
