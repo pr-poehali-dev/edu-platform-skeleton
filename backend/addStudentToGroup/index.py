@@ -110,6 +110,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
+    cursor.execute("SET search_path TO t_p78721878_edu_platform_skeleto")
     cursor.execute(f"SELECT id, teacher_id FROM groups WHERE id = {group_id}")
     group = cursor.fetchone()
     
