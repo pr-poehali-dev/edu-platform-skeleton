@@ -110,8 +110,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute("SET search_path TO t_p78721878_edu_platform_skeleto")
-    cursor.execute(f"SELECT id, teacher_id FROM groups WHERE id = {group_id}")
+    cursor.execute(f"SELECT id, teacher_id FROM t_p78721878_edu_platform_skeleto.groups WHERE id = {group_id}")
     group = cursor.fetchone()
     
     if not group:
@@ -141,7 +140,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     email_escaped = student_email.replace("'", "''")
-    cursor.execute(f"SELECT id, full_name, role FROM users WHERE email = '{email_escaped}'")
+    cursor.execute(f"SELECT id, full_name, role FROM t_p78721878_edu_platform_skeleto.users WHERE email = '{email_escaped}'")
     student = cursor.fetchone()
     
     if not student:
@@ -170,7 +169,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
-    cursor.execute(f"SELECT id FROM enrollments WHERE group_id = {group_id} AND student_id = {student['id']}")
+    cursor.execute(f"SELECT id FROM t_p78721878_edu_platform_skeleto.enrollments WHERE group_id = {group_id} AND student_id = {student['id']}")
     existing = cursor.fetchone()
     
     if existing:
@@ -187,7 +186,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     cursor.execute(f"""
-        INSERT INTO enrollments (group_id, student_id) 
+        INSERT INTO t_p78721878_edu_platform_skeleto.enrollments (group_id, student_id) 
         VALUES ({group_id}, {student['id']}) 
         RETURNING id, group_id, student_id, enrolled_at
     """)
