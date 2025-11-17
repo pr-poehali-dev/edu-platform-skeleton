@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Get dashboard with valid token",
+      "method": "GET",
+      "headers": {
+        "X-Auth-Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZSI6InN0dWRlbnQiLCJleHAiOjE3NjM5NjM1MzJ9.AmdRgeSpUwhFBsVL_jjKxSWu4-cawTTCBW8Kd-VXNHY"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "data": {
+          "active_homework": "array",
+          "debts": "array",
+          "history": "array"
+        }
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject request without token",
+      "method": "GET",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
